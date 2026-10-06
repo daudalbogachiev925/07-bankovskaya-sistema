@@ -1,11 +1,10 @@
-# Двойная запись
+from fastapi.testclient import TestClient
+from main import app
+client = TestClient(app)
 
-Каждая транзакция = Дт одного счёта + Кт другого.
-Итог по всем счетам всегда = 0 (контроль).
+def test_health():
+    assert client.get("/health").json() == {"status": "ok"}
 
-- current — расчётный счёт клиента
-- deposit — депозит
-- credit — ссудный счёт (баланс отрицательный)
-
-Переводы выполняются внутри транзакции БД (BEGIN...COMMIT),
-блокировка строки счёта через SELECT ... FOR UPDATE.
+def test_transfer_validation():
+    r = client.post("/transactions/transfer", json={"from_acc": 1, "to_acc": 2, "amount": -100})
+    assert r.status_code == 400
